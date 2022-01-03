@@ -42,8 +42,8 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
      */
     private final Point TARGET_LOCATION = new Point(53.9, 27.5667);
 
-    private final Point ROUTE_START_LOCATION = new Point(53.9, 27.5667);
-    private final Point ROUTE_END_LOCATION = new Point(53.9, 28.558571);
+    private final Point ROUTE_START_LOCATION = new Point(53.894234, 27.561915);
+    private final Point ROUTE_END_LOCATION = new Point(53.892540, 27.557012);
 
     private MapView mapView;
     private MasstransitRouter mtRouter;
@@ -68,6 +68,8 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
         mapView.getMap().addInputListener(this);
         mapView.getMap().deselectGeoObject();
 
+        mapObjects = mapView.getMap().getMapObjects().addCollection();
+
         MasstransitOptions options = new MasstransitOptions(
                 new ArrayList<>(),
                 new ArrayList<>(),
@@ -77,8 +79,7 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
         points.add(new RequestPoint(ROUTE_END_LOCATION, RequestPointType.WAYPOINT, null));
         mtRouter = TransportFactory.getInstance().createMasstransitRouter();
 //        mtRouter.requestRoutes(points, options, this);
-//        mtRouter.requestRoutes(points,new TransitOptions(), this);
-        mtRouter.resolveUri("ymapsbm1://route/transit/",new TimeOptions(),this);
+//        mtRouter.resolveUri("ymapsbm1://route/transit/",new TimeOptions(),this);
 
 
     }
