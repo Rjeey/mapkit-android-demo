@@ -44,4 +44,5 @@ android {
 
 dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
+    implementation 'io.github.ParkSangGwon:tedpermission-normal:3.3.0'
 }

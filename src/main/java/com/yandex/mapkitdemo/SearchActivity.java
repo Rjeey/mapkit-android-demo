@@ -68,15 +68,12 @@ public class SearchActivity extends Activity implements Session.SearchListener, 
         mapView.getMap().addCameraListener(this);
 
         searchEdit = (EditText)findViewById(R.id.search_edit);
-        searchEdit.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
-                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    submitQuery(searchEdit.getText().toString());
-                }
-
-                return false;
+        searchEdit.setOnEditorActionListener((textView, actionId, keyEvent) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                submitQuery(searchEdit.getText().toString());
             }
+
+            return false;
         });
 
         mapView.getMap().move(
