@@ -1,35 +1,42 @@
 package com.yandex.mapkitdemo;
 
 import android.Manifest;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Toast;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.*;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.normal.TedPermission;
 import com.yandex.mapkit.Animation;
 import com.yandex.mapkit.MapKitFactory;
 import com.yandex.mapkit.RequestPoint;
 import com.yandex.mapkit.RequestPointType;
+import com.yandex.mapkit.directions.driving.DrivingSectionMetadata;
 import com.yandex.mapkit.geometry.Point;
 import com.yandex.mapkit.geometry.Polyline;
 import com.yandex.mapkit.geometry.SubpolylineHelper;
 import com.yandex.mapkit.layers.GeoObjectTapEvent;
 import com.yandex.mapkit.layers.GeoObjectTapListener;
 import com.yandex.mapkit.map.*;
+import com.yandex.mapkit.map.Map;
 import com.yandex.mapkit.mapview.MapView;
+import com.yandex.mapkit.search.BusinessObjectMetadata;
+import com.yandex.mapkit.search.ToponymObjectMetadata;
 import com.yandex.mapkit.transport.TransportFactory;
 import com.yandex.mapkit.transport.masstransit.*;
+import com.yandex.mapkitdemo.utils.list.MyListAdapter;
 import com.yandex.runtime.Error;
 import com.yandex.runtime.i18n.I18nManagerFactory;
 import com.yandex.runtime.network.NetworkError;
 import com.yandex.runtime.network.RemoteError;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 /**
  * This is a basic example that displays a map and sets camera focus on the target location.
@@ -45,18 +52,36 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
     private final Point ROUTE_START_LOCATION = new Point(53.894234, 27.561915);
     private final Point ROUTE_END_LOCATION = new Point(53.892540, 27.557012);
 
+
     private MapView mapView;
     private MasstransitRouter mtRouter;
     private MapObjectCollection mapObjects;
+
+    private BottomSheetBehavior bottomSheetBehavior;
+    private LinearLayout linearLayoutBSheet;
+    private ListView listView;
+    private TextView textCommon, textDescription, textNumberTransport, textSubtitle, textTimeArrived;
+    private ImageButton btnClose;
+    private ImageView iconTransp;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if(Build.VERSION.SDK_INT >=21){
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(Color.TRANSPARENT);
+        }
+
         MapKitFactory.setApiKey("a305ff24-d0df-4871-9a52-0ae434368133");
         MapKitFactory.initialize(this);
         setContentView(R.layout.map);
         checkPermission();
+        getSupportActionBar().hide();
+        init();
         mapView = findViewById(R.id.mapview);
 
         // And to show what can be done with it, we move the camera to the center of Saint Petersburg.
@@ -78,9 +103,65 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
         points.add(new RequestPoint(ROUTE_START_LOCATION, RequestPointType.WAYPOINT, null));
         points.add(new RequestPoint(ROUTE_END_LOCATION, RequestPointType.WAYPOINT, null));
         mtRouter = TransportFactory.getInstance().createMasstransitRouter();
-//        mtRouter.requestRoutes(points, options, this);
-//        mtRouter.resolveUri("ymapsbm1://route/transit/",new TimeOptions(),this);
 
+
+
+
+
+    }
+
+    private void init() {
+
+
+        this.linearLayoutBSheet = findViewById(R.id.bottomSheet);
+        this.bottomSheetBehavior = BottomSheetBehavior.from(linearLayoutBSheet);
+        this.listView = findViewById(R.id.list_transp);
+        this.textCommon = findViewById(R.id.text_common);
+        this.textDescription = findViewById(R.id.text_description);
+        this.textNumberTransport = findViewById(R.id.number_transp);
+        this.textSubtitle = findViewById(R.id.subtitle);
+        this.textTimeArrived = findViewById(R.id.text_time);
+        this.btnClose = findViewById(R.id.btn_close);
+        this.iconTransp = findViewById(R.id.icon_transp);
+
+//        MyListAdapter adapter=new MyListAdapter(this, maintitle, subtitle,imgid);
+//        listView.setAdapter(adapter);
+
+
+        bottomSheetBehavior.setPeekHeight(0);
+
+        btnClose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                bottomSheetBehavior.setPeekHeight(0);
+            }
+        });
+
+        bottomSheetBehavior.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+            @Override
+            public void onStateChanged(@NonNull View view, int i) {
+
+                if (i == BottomSheetBehavior.STATE_COLLAPSED) {
+                    bottomSheetBehavior.setPeekHeight(300);
+                }
+                if(i == BottomSheetBehavior.STATE_COLLAPSED && bottomSheetBehavior.getPeekHeight()==300){
+                    bottomSheetBehavior.setPeekHeight(100);
+                }
+                if(i == BottomSheetBehavior.STATE_HIDDEN){
+                    mapView.getMap().deselectGeoObject();
+                }
+            }
+
+            @Override
+            public void onSlide(@NonNull View view, float v) {
+
+            }
+        });
+
+    }
+
+    public void setListOfTransport(){
 
     }
 
@@ -224,6 +305,15 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
                 .getGeoObject()
                 .getMetadataContainer()
                 .getItem(GeoObjectSelectionMetadata.class);
+
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        bottomSheetBehavior.setPeekHeight(300);
+
+
+        System.out.println(geoObjectTapEvent.getGeoObject().getName());
+        System.out.println(geoObjectTapEvent.getGeoObject().getGeometry().get(0).getPoint().getLatitude());
+        System.out.println(geoObjectTapEvent.getGeoObject().getGeometry().get(0).getPoint().getLongitude());
+
 
         if (selectionMetadata != null) {
             mapView.getMap().selectGeoObject(selectionMetadata.getId(), selectionMetadata.getLayerId());

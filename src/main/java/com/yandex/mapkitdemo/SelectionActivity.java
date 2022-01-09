@@ -78,6 +78,7 @@ public class SelectionActivity extends Activity implements GeoObjectTapListener,
                 .getMetadataContainer()
                 .getItem(GeoObjectSelectionMetadata.class);
 
+
         if (selectionMetadata != null) {
             mapView.getMap().selectGeoObject(selectionMetadata.getId(), selectionMetadata.getLayerId());
         }

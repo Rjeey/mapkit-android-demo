@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:background="@drawable/rectangle"
+>
+
+
+
+    <RelativeLayout android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    tools:ignore="UselessParent">
+
+        <ImageView
+                android:id="@+id/top_separator"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/separator"
+                android:layout_marginBottom="2dp"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="10dp"
+                android:contentDescription="DragMe"/>
+
+
+        <ImageView
+                android:id="@+id/icon_transp"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_below="@+id/top_separator"
+                android:src="@drawable/trolleybus"
+                android:background="@drawable/background_bus"
+                android:layout_marginLeft="20dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:padding="5dp"/>
+
+
+        <TextView
+                android:id="@+id/number_transp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="53"
+                android:textStyle="bold"
+                android:layout_toEndOf="@+id/icon_transp"
+                android:layout_toRightOf="@+id/icon_transp"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="25dp"
+                android:padding="2dp"
+                android:textColor="#ADBDB7B7"
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp"/>
+
+        <TextView
+                android:id="@+id/subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/number_transp"
+                android:layout_toEndOf="@+id/icon_transp"
+                android:layout_toRightOf="@+id/icon_transp"
+                android:text="ДС Малиновка-4"
+                android:textColor="#F06C6B6B"
+                android:layout_marginTop="2dp"
+                android:layout_marginLeft="14dp"
+                android:layout_marginStart="14dp"
+        />
+
+        <TextView
+                android:id="@+id/text_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#F0228022"
+                android:layout_below="@+id/top_separator"
+                android:layout_toEndOf="@+id/icon_transp"
+                android:layout_toRightOf="@+id/icon_transp"
+                android:layout_marginTop="25dp"
+                android:layout_marginLeft="320dp"
+                android:layout_marginStart="320dp"
+                android:text="2 мин"
+        />
+
+        <ImageView
+                android:id="@+id/bottom_separator"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/separator"
+                android:layout_below="@+id/subtitle"
+                android:layout_marginBottom="2dp"
+                android:layout_marginTop="20dp"
+                android:layout_centerHorizontal="true"
+                android:contentDescription="DragMe"/>
+    </RelativeLayout>
+
+
+
+
+
+</LinearLayout>

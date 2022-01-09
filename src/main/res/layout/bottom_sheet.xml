@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/bottomSheet"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/rounded"
+        android:orientation="vertical"
+        app:behavior_hideable="true"
+        app:behavior_peekHeight="800dp"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
+>
+
+
+    <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/rounded"
+            android:paddingEnd="10dp"
+            android:paddingStart="10dp"
+    >
+        <ImageView
+                android:id="@+id/dragImage"
+                android:layout_width="70dp"
+                android:layout_height="10dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/base_line"
+                android:layout_marginTop="20dp"
+                android:layout_centerHorizontal="true"
+                android:contentDescription="DragMe"/>
+        <ImageButton
+                android:id="@+id/btn_close"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_baseline_close_24"
+                android:background="@drawable/rounded_button"
+                android:layout_below="@+id/dragImage"
+                android:layout_marginRight="20dp"
+                android:layout_marginTop="10dp"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
+                android:contentDescription="Close"/>
+
+        <TextView
+                android:id="@+id/text_common"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/dragImage"
+                android:layout_marginTop="10dp"
+                android:layout_marginLeft="20dp"
+                android:textColor="#DDD6D6"
+                android:text="Something"
+                android:textSize="20dp"
+        />
+
+        <TextView
+                android:id="@+id/text_description"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/text_common"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="5dp"
+                android:textColor="#7A7676"
+                android:text="Something"
+                android:textSize="17dp"
+        />
+
+    </RelativeLayout>
+
+    <ListView
+            android:id="@+id/list_transp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:divider="#8E8787"
+            android:dividerHeight="1dp"
+
+            android:layout_marginTop="10dp"/>
+
+
+</LinearLayout>
