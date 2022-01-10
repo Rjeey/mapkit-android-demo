@@ -159,6 +159,7 @@ public class MasstransitRoutingActivity extends Activity
             knownVehicleTypes.add("tramway");
             for (Transport transport : data.getTransports()) {
                 String sectionVehicleType = getVehicleType(transport, knownVehicleTypes);
+                transport.getTransports().get(0).getAlternateDepartureStop().getName();
                 if (sectionVehicleType.equals("bus")) {
                     polylineMapObject.setStrokeColor(0xFF00FF00);  // Green
                     return;

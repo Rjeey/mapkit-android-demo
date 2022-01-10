@@ -2,6 +2,7 @@ package com.yandex.mapkitdemo;
 
 import android.Manifest;
 import android.graphics.Color;
+import android.graphics.PointF;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
@@ -9,20 +10,19 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.*;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.normal.TedPermission;
-import com.yandex.mapkit.Animation;
-import com.yandex.mapkit.MapKitFactory;
-import com.yandex.mapkit.RequestPoint;
-import com.yandex.mapkit.RequestPointType;
+import com.yandex.mapkit.*;
 import com.yandex.mapkit.directions.driving.DrivingSectionMetadata;
 import com.yandex.mapkit.geometry.Point;
 import com.yandex.mapkit.geometry.Polyline;
 import com.yandex.mapkit.geometry.SubpolylineHelper;
 import com.yandex.mapkit.layers.GeoObjectTapEvent;
 import com.yandex.mapkit.layers.GeoObjectTapListener;
+import com.yandex.mapkit.layers.ObjectEvent;
 import com.yandex.mapkit.map.*;
 import com.yandex.mapkit.map.Map;
 import com.yandex.mapkit.mapview.MapView;
@@ -30,9 +30,13 @@ import com.yandex.mapkit.search.BusinessObjectMetadata;
 import com.yandex.mapkit.search.ToponymObjectMetadata;
 import com.yandex.mapkit.transport.TransportFactory;
 import com.yandex.mapkit.transport.masstransit.*;
+import com.yandex.mapkit.user_location.UserLocationLayer;
+import com.yandex.mapkit.user_location.UserLocationObjectListener;
+import com.yandex.mapkit.user_location.UserLocationView;
 import com.yandex.mapkitdemo.utils.list.MyListAdapter;
 import com.yandex.runtime.Error;
 import com.yandex.runtime.i18n.I18nManagerFactory;
+import com.yandex.runtime.image.ImageProvider;
 import com.yandex.runtime.network.NetworkError;
 import com.yandex.runtime.network.RemoteError;
 
@@ -42,7 +46,8 @@ import java.util.*;
  * This is a basic example that displays a map and sets camera focus on the target location.
  * Note: When working on your projects, remember to request the required permissions.
  */
-public class MapActivity extends AppCompatActivity implements Session.RouteListener, GeoObjectTapListener, InputListener {
+public class MapActivity extends AppCompatActivity implements Session.RouteListener,
+        GeoObjectTapListener, InputListener, UserLocationObjectListener {
     /**
      * Replace "your_api_key" with a valid developer key.
      * You can get it at the https://developer.tech.yandex.ru/ website.
@@ -56,6 +61,9 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
     private MapView mapView;
     private MasstransitRouter mtRouter;
     private MapObjectCollection mapObjects;
+    private UserLocationLayer userLocationLayer;
+    private MapKit mapKit;
+    private boolean isFind = false;
 
     private BottomSheetBehavior bottomSheetBehavior;
     private LinearLayout linearLayoutBSheet;
@@ -63,6 +71,10 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
     private TextView textCommon, textDescription, textNumberTransport, textSubtitle, textTimeArrived;
     private ImageButton btnClose;
     private ImageView iconTransp;
+    private ImageButton findLocation;
+    private ImageButton routeBtn;
+    private Button closeBtnRoute;
+    private AlertDialog dialog;
 
 
     @Override
@@ -78,11 +90,12 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
 
         MapKitFactory.setApiKey("a305ff24-d0df-4871-9a52-0ae434368133");
         MapKitFactory.initialize(this);
+
         setContentView(R.layout.map);
         checkPermission();
         getSupportActionBar().hide();
-        init();
         mapView = findViewById(R.id.mapview);
+        init();
 
         // And to show what can be done with it, we move the camera to the center of Saint Petersburg.
         mapView.getMap().move(
@@ -104,14 +117,33 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
         points.add(new RequestPoint(ROUTE_END_LOCATION, RequestPointType.WAYPOINT, null));
         mtRouter = TransportFactory.getInstance().createMasstransitRouter();
 
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Маршрут");
 
+        View view = getLayoutInflater().inflate(R.layout.custom_dialog, null);
+        closeBtnRoute = view.findViewById(R.id.close_btn_route);
+        closeBtnRoute.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
 
-
-
+        builder.setView(view);
+        dialog = builder.create();
+        routeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.show();
+            }
+        });
     }
 
     private void init() {
 
+        mapKit = MapKitFactory.getInstance();
+        userLocationLayer = mapKit.createUserLocationLayer(mapView.getMapWindow());
+        userLocationLayer.setObjectListener(this);
 
         this.linearLayoutBSheet = findViewById(R.id.bottomSheet);
         this.bottomSheetBehavior = BottomSheetBehavior.from(linearLayoutBSheet);
@@ -123,6 +155,24 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
         this.textTimeArrived = findViewById(R.id.text_time);
         this.btnClose = findViewById(R.id.btn_close);
         this.iconTransp = findViewById(R.id.icon_transp);
+        findLocation = findViewById(R.id.find_loc_btn);
+        this.routeBtn = findViewById(R.id.route_btn);
+
+        findLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(!isFind) {
+                    isFind = true;
+                    userLocationLayer.setVisible(true);
+                    userLocationLayer.setHeadingEnabled(true);
+//                    userLocationLayer.setObjectListener(MapActivity.this);
+                }else{
+                    userLocationLayer.setVisible(false);
+                    userLocationLayer.setHeadingEnabled(false);
+                }
+            }
+
+        });
 
 //        MyListAdapter adapter=new MyListAdapter(this, maintitle, subtitle,imgid);
 //        listView.setAdapter(adapter);
@@ -330,6 +380,49 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
 
     @Override
     public void onMapLongTap(@NonNull Map map, @NonNull Point point) {
+
+    }
+
+    @Override
+    public void onObjectAdded(@NonNull UserLocationView userLocationView) {
+        userLocationLayer.setAnchor(
+                new PointF((float)(mapView.getWidth() * 0.5), (float)(mapView.getHeight() * 0.5)),
+                new PointF((float)(mapView.getWidth() * 0.5), (float)(mapView.getHeight() * 0.83)));
+
+        userLocationView.getArrow().setIcon(ImageProvider.fromResource(
+                this, R.drawable.user_arrow));
+
+        CompositeIcon pinIcon = userLocationView.getPin().useCompositeIcon();
+
+//        pinIcon.setIcon(
+//                "icon",
+//                ImageProvider.fromResource(this, R.drawable.icon),
+//                new IconStyle().setAnchor(new PointF(0f, 0f))
+//                        .setRotationType(RotationType.ROTATE)
+//                        .setZIndex(0f)
+//                        .setScale(1f)
+//        );
+//
+//        pinIcon.setIcon(
+//                "pin",
+//                ImageProvider.fromResource(this, R.drawable.search_result),
+//                new IconStyle().setAnchor(new PointF(0.5f, 0.5f))
+//                        .setRotationType(RotationType.ROTATE)
+//                        .setZIndex(1f)
+//                        .setScale(0.5f)
+//        );
+//
+//        userLocationView.getAccuracyCircle().setFillColor(Color.BLUE & 0x99ffffff);
+
+    }
+
+    @Override
+    public void onObjectRemoved(@NonNull UserLocationView userLocationView) {
+
+    }
+
+    @Override
+    public void onObjectUpdated(@NonNull UserLocationView userLocationView, @NonNull ObjectEvent objectEvent) {
 
     }
 }
