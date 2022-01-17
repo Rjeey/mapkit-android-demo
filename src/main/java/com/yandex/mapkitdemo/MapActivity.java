@@ -135,7 +135,6 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
         mapView.getMap().deselectGeoObject();
 
         mapObjects = mapView.getMap().getMapObjects().addCollection();
-        resultAdapterRoute.notifyDataSetChanged();
     }
 
 
@@ -206,11 +205,17 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
                 }
 
 //                drawRoutes();
-                if (startPoint != null && endPoint != null) {
-                    drawRoutes();
-                } else {
-                    commonError("cannot find start, end point for draw route");
-                }
+//                System.out.println("start point");
+//                System.out.println(startPoint.getLatitude());
+//                System.out.println(startPoint.getLongitude());
+//                System.out.println("end point");
+//                System.out.println(endPoint.getLatitude());
+//                System.out.println(endPoint.getLongitude());
+//                if (startPoint != null && endPoint != null) {
+//                    drawRoutes();
+//                } else {
+//                    commonError("cannot find start, end point for draw route");
+//                }
 
                 dialog.dismiss();
             }
@@ -422,6 +427,9 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
                 } else if (sectionVehicleType.equals("tramway")) {
                     polylineMapObject.setStrokeColor(0xFFFF0000);  // Red
                     return;
+                }else{
+                    polylineMapObject.setStrokeColor(0xFFFF0000);  // Red
+                    return;
                 }
             }
             polylineMapObject.setStrokeColor(0xFF0000FF);  // Blue
@@ -433,12 +441,19 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
 
     private String getVehicleType(Transport transport, HashSet<String> knownVehicleTypes) {
 
+        System.out.println("getVehicleTypes");
         for (String type : transport.getLine().getVehicleTypes()) {
+            System.out.println(type);
             if (knownVehicleTypes.contains(type)) {
+                System.out.println(transport.getLine().getName());
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    transport.getTransports().forEach(System.out::println);
+                }
+                System.out.println(transport.getLine().getStyle().getColor());
                 return type;
             }
         }
-        return null;
+        return "unknown";
     }
 
     @Override
@@ -518,6 +533,12 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
                 new ArrayList<>(),
                 new TimeOptions());
         List<RequestPoint> points = new ArrayList<>();
+        System.out.println("start point");
+        System.out.println(startPoint.getLatitude());
+        System.out.println(startPoint.getLongitude());
+        System.out.println("end point");
+        System.out.println(endPoint.getLatitude());
+        System.out.println(endPoint.getLongitude());
         if (startPoint != null && endPoint != null) {
             points.add(new RequestPoint(startPoint, RequestPointType.WAYPOINT, null));
             points.add(new RequestPoint(endPoint, RequestPointType.WAYPOINT, null));
@@ -532,7 +553,7 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
     public void onSearchResponse(@NonNull Response response) {
         System.out.println("Start onSearchResponse");
         MapObjectCollection mapObjects = mapView.getMap().getMapObjects();
-        mapObjects.clear();
+//        mapObjects.clear();
         System.out.println(routing);
         System.out.println("text" + response.getMetadata().getRequestText());
         System.out.println("type" + response.getMetadata().getDisplayType());
@@ -547,12 +568,21 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
                         resultLocation,
                         ImageProvider.fromResource(this, R.drawable.map_point));
             } else if (resultLocation != null && routing) {
-                System.out.println("set start point & end point");
-                if (startPointRoute.getText().toString().equals(response.getMetadata().getRequestText()))
-                    startPoint = resultLocation;
-                if (endPointRoute.getText().toString().equals(response.getMetadata().getRequestText()))
-                    endPoint = resultLocation;
+
+                if (startPointRoute.getText().toString().equals(response.getMetadata().getRequestText())) {
+                    System.out.println("set start point" + resultLocation.getLatitude()+" "+resultLocation.getLongitude());
+                    startPoint = new Point(resultLocation.getLatitude(), resultLocation.getLongitude());
+                }
+                if (endPointRoute.getText().toString().equals(response.getMetadata().getRequestText())) {
+                    System.out.println("set end point"  + resultLocation.getLatitude()+" "+resultLocation.getLongitude());
+                    endPoint = new Point(resultLocation.getLatitude(), resultLocation.getLongitude());
+                }
             }
+        }
+        if (startPoint != null && endPoint != null) {
+            drawRoutes();
+        } else {
+            commonError("cannot find start, end point for draw route");
         }
     }
 
