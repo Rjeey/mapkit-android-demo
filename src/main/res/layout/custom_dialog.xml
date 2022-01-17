@@ -10,12 +10,15 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-        <EditText
+        <AutoCompleteTextView
+                android:id="@+id/edit_start_point_route"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Начало пути"/>
 
-        <EditText
+
+        <AutoCompleteTextView
+                android:id="@+id/edit_end_point_route"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Конец Пути"/>
@@ -36,7 +39,7 @@
     />
 
     <Button
-            android:id="@+id/route"
+            android:id="@+id/build_route"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/text_container"
@@ -47,7 +50,6 @@
             android:layout_marginEnd="40dp"
             android:layout_marginTop="20dp"
             android:text="ПОСТРОИТЬ"/>
-
 
 
 </RelativeLayout>

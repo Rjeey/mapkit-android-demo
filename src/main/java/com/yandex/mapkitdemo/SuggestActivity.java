@@ -2,14 +2,11 @@ package com.yandex.mapkitdemo;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.widget.*;
 import androidx.annotation.NonNull;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.Toast;
 
 import com.yandex.mapkit.MapKitFactory;
 import com.yandex.mapkit.search.SuggestOptions;
@@ -42,7 +39,7 @@ public class SuggestActivity extends Activity implements SuggestSession.SuggestL
     private SearchManager searchManager;
     private SuggestSession suggestSession;
     private ListView suggestResultView;
-    private ArrayAdapter resultAdapter;
+    private ArrayAdapter<String> resultAdapter;
     private List<String> suggestResult;
 
     private final Point CENTER = new Point(55.75, 37.62);
@@ -72,7 +69,6 @@ public class SuggestActivity extends Activity implements SuggestSession.SuggestL
                 android.R.id.text1,
                 suggestResult);
         suggestResultView.setAdapter(resultAdapter);
-
         queryEdit.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}

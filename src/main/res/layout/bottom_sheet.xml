@@ -67,15 +67,11 @@
         />
 
     </RelativeLayout>
-
-    <ListView
-            android:id="@+id/list_transp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:divider="#8E8787"
-            android:dividerHeight="1dp"
-
-            android:layout_marginTop="10dp"/>
-
-
+            <ListView
+                    android:id="@+id/list_transp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:divider="#8E8787"
+                    android:dividerHeight="1dp"
+                    android:layout_marginTop="10dp"/>
 </LinearLayout>
