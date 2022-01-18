@@ -419,6 +419,7 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
             HashSet<String> knownVehicleTypes = new HashSet<>();
             knownVehicleTypes.add("bus");
             knownVehicleTypes.add("tramway");
+            knownVehicleTypes.add("minibus");
             for (Transport transport : data.getTransports()) {
                 String sectionVehicleType = getVehicleType(transport, knownVehicleTypes);
                 if (sectionVehicleType.equals("bus")) {
@@ -427,8 +428,8 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
                 } else if (sectionVehicleType.equals("tramway")) {
                     polylineMapObject.setStrokeColor(0xFFFF0000);  // Red
                     return;
-                }else{
-                    polylineMapObject.setStrokeColor(0xFFFF0000);  // Red
+                }else if (sectionVehicleType.equals("minibus")){
+                    polylineMapObject.setStrokeColor(0xFF00FF00);  // Green
                     return;
                 }
             }
@@ -445,11 +446,7 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
         for (String type : transport.getLine().getVehicleTypes()) {
             System.out.println(type);
             if (knownVehicleTypes.contains(type)) {
-                System.out.println(transport.getLine().getName());
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    transport.getTransports().forEach(System.out::println);
-                }
-                System.out.println(transport.getLine().getStyle().getColor());
+
                 return type;
             }
         }
@@ -547,6 +544,10 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
         }
 
         mtRouter.requestRoutes(points, options, this);
+        mapView.getMap().move(
+                new CameraPosition(startPoint, 12.0f, 0.0f, 0.0f),
+                new Animation(Animation.Type.SMOOTH, 5),
+                null);
     }
 
     @Override
@@ -581,8 +582,6 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
         }
         if (startPoint != null && endPoint != null) {
             drawRoutes();
-        } else {
-            commonError("cannot find start, end point for draw route");
         }
     }
 
