@@ -357,6 +357,7 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
 
     @Override
     public void onMasstransitRoutes(@NonNull List<Route> list) {
+        mapObjects.clear();
         if (list.size() > 0) {
             for (Section section : list.get(0).getSections()) {
                 drawSection(
@@ -545,7 +546,7 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
 
         mtRouter.requestRoutes(points, options, this);
         mapView.getMap().move(
-                new CameraPosition(startPoint, 12.0f, 0.0f, 0.0f),
+                new CameraPosition(startPoint, 15.0f, 0.0f, 0.0f),
                 new Animation(Animation.Type.SMOOTH, 5),
                 null);
     }
