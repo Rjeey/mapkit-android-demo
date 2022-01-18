@@ -1,4 +1,4 @@
-package com.yandex.mapkitdemo;
+package com.yandex.mapkitdemo.ui.map;
 
 import android.Manifest;
 import android.graphics.Color;
@@ -7,18 +7,17 @@ import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
+import android.view.*;
 import android.widget.*;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.normal.TedPermission;
 import com.yandex.mapkit.*;
-import com.yandex.mapkit.directions.navigation.SpeedLimitsRules;
 import com.yandex.mapkit.geometry.BoundingBox;
 import com.yandex.mapkit.geometry.Point;
 import com.yandex.mapkit.geometry.Polyline;
@@ -28,6 +27,7 @@ import com.yandex.mapkit.layers.GeoObjectTapListener;
 import com.yandex.mapkit.layers.ObjectEvent;
 import com.yandex.mapkit.map.*;
 import com.yandex.mapkit.map.Map;
+import com.yandex.mapkit.map.internal.MapBinding;
 import com.yandex.mapkit.mapview.MapView;
 import com.yandex.mapkit.search.*;
 import com.yandex.mapkit.transport.TransportFactory;
@@ -36,20 +36,20 @@ import com.yandex.mapkit.transport.masstransit.Session;
 import com.yandex.mapkit.user_location.UserLocationLayer;
 import com.yandex.mapkit.user_location.UserLocationObjectListener;
 import com.yandex.mapkit.user_location.UserLocationView;
+import com.yandex.mapkitdemo.R;
 import com.yandex.runtime.Error;
 import com.yandex.runtime.i18n.I18nManagerFactory;
 import com.yandex.runtime.image.ImageProvider;
 import com.yandex.runtime.network.NetworkError;
 import com.yandex.runtime.network.RemoteError;
 
-import java.lang.reflect.TypeVariable;
 import java.util.*;
 
 /**
  * This is a basic example that displays a map and sets camera focus on the target location.
  * Note: When working on your projects, remember to request the required permissions.
  */
-public class MapActivity extends AppCompatActivity implements Session.RouteListener,
+public class MapActivity extends Fragment implements Session.RouteListener,
         GeoObjectTapListener, InputListener, UserLocationObjectListener,
         com.yandex.mapkit.search.Session.SearchListener,
         CameraListener, SuggestSession.SuggestListener {
@@ -85,6 +85,8 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
     private SuggestSession suggestSession;
     private List<String> suggestResultRoute;
     private ArrayAdapter<String> resultAdapterRoute;
+    private View fragmentMap;
+    private View root;
 
 
     private boolean isFind = false;
@@ -104,28 +106,23 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
     private AutoCompleteTextView endPointRoute;
 
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+
+        fragmentMap = inflater.inflate(R.layout.map, container, false);
+        root = fragmentMap.getRootView();
 
         if (Build.VERSION.SDK_INT >= 21) {
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-            Window window = getWindow();
+            getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+            Window window = getActivity().getWindow();
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.setStatusBarColor(Color.TRANSPARENT);
         }
 
-        MapKitFactory.setApiKey("a305ff24-d0df-4871-9a52-0ae434368133");
-        MapKitFactory.initialize(this);
-
-        setContentView(R.layout.map);
-        checkPermission();
-        getSupportActionBar().hide();
-        mapView = findViewById(R.id.mapview);
+        mapView = root.findViewById(R.id.mapview);
         init();
         initRouteDialog();
-
-        // And to show what can be done with it, we move the camera to the center of Saint Petersburg.
         mapView.getMap().move(
                 new CameraPosition(TARGET_LOCATION, 14.0f, 0.0f, 0.0f),
                 new Animation(Animation.Type.SMOOTH, 5),
@@ -135,12 +132,17 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
         mapView.getMap().deselectGeoObject();
 
         mapObjects = mapView.getMap().getMapObjects().addCollection();
+
+//        MapKitFactory.setApiKey("a305ff24-d0df-4871-9a52-0ae434368133");
+//        MapKitFactory.initialize(root.getContext());
+
+        return root;
     }
 
 
     private void initRouteDialog() {
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Маршрут");
 
         View view = getLayoutInflater().inflate(R.layout.custom_dialog, null);
@@ -149,7 +151,7 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
         startPointRoute = view.findViewById(R.id.edit_start_point_route);
         endPointRoute = view.findViewById(R.id.edit_end_point_route);
         suggestResultRoute = new ArrayList<>();
-        resultAdapterRoute = new ArrayAdapter<>(this,
+        resultAdapterRoute = new ArrayAdapter<>(getContext(),
                 android.R.layout.simple_dropdown_item_1line,
                 suggestResultRoute);
         startPointRoute.setAdapter(resultAdapterRoute);
@@ -241,7 +243,7 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
     private void init() {
 
         mapKit = MapKitFactory.getInstance();
-        SearchFactory.initialize(this);
+        SearchFactory.initialize(getContext());
         userLocationLayer = mapKit.createUserLocationLayer(mapView.getMapWindow());
         userLocationLayer.setObjectListener(this);
         searchManager = SearchFactory.getInstance().createSearchManager(SearchManagerType.COMBINED);
@@ -249,18 +251,18 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
         mtRouter = TransportFactory.getInstance().createMasstransitRouter();
 
 
-        this.linearLayoutBSheet = findViewById(R.id.bottomSheet);
+        this.linearLayoutBSheet = root.findViewById(R.id.bottomSheet);
         this.bottomSheetBehavior = BottomSheetBehavior.from(linearLayoutBSheet);
-        this.listView = findViewById(R.id.list_transp);
-        this.textCommon = findViewById(R.id.text_common);
-        this.textDescription = findViewById(R.id.text_description);
-        this.textNumberTransport = findViewById(R.id.number_transp);
-        this.textSubtitle = findViewById(R.id.subtitle);
-        this.textTimeArrived = findViewById(R.id.text_time);
-        this.btnClose = findViewById(R.id.btn_close);
-        this.iconTransp = findViewById(R.id.icon_transp);
-        this.findLocation = findViewById(R.id.find_loc_btn);
-        this.routeBtn = findViewById(R.id.route_btn);
+        this.listView = root.findViewById(R.id.list_transp);
+        this.textCommon = root.findViewById(R.id.text_common);
+        this.textDescription = root.findViewById(R.id.text_description);
+        this.textNumberTransport = root.findViewById(R.id.number_transp);
+        this.textSubtitle = root.findViewById(R.id.subtitle);
+        this.textTimeArrived = root.findViewById(R.id.text_time);
+        this.btnClose = root.findViewById(R.id.btn_close);
+        this.iconTransp = root.findViewById(R.id.icon_transp);
+        this.findLocation = root.findViewById(R.id.find_loc_btn);
+        this.routeBtn = root.findViewById(R.id.route_btn);
 
         findLocation.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -324,12 +326,12 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
         PermissionListener permissionlistener = new PermissionListener() {
             @Override
             public void onPermissionGranted() {
-                Toast.makeText(MapActivity.this, "Permission Granted", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Permission Granted", Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onPermissionDenied(List<String> deniedPermissions) {
-                Toast.makeText(MapActivity.this, "Permission Denied\n" + deniedPermissions.toString(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Permission Denied\n" + deniedPermissions.toString(), Toast.LENGTH_SHORT).show();
             }
         };
 
@@ -341,14 +343,15 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
     }
 
     @Override
-    protected void onStop() {
+    public void onStop() {
         mapView.onStop();
         MapKitFactory.getInstance().onStop();
         super.onStop();
     }
 
+
     @Override
-    protected void onStart() {
+    public void onStart() {
         super.onStart();
         mapView.onStart();
         MapKitFactory.getInstance().onStart();
@@ -377,7 +380,7 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
             errorMessage = getString(R.string.network_error_message);
         }
 
-        Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();
 
     }
 
@@ -429,7 +432,7 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
                 } else if (sectionVehicleType.equals("tramway")) {
                     polylineMapObject.setStrokeColor(0xFFFF0000);  // Red
                     return;
-                }else if (sectionVehicleType.equals("minibus")){
+                } else if (sectionVehicleType.equals("minibus")) {
                     polylineMapObject.setStrokeColor(0xFF00FF00);  // Green
                     return;
                 }
@@ -503,7 +506,7 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
                 new PointF((float) (mapView.getWidth() * 0.5), (float) (mapView.getHeight() * 0.83)));
 
         userLocationView.getArrow().setIcon(ImageProvider.fromResource(
-                this, R.drawable.user_arrow));
+                getContext(), R.drawable.user_arrow));
     }
 
     @Override
@@ -568,15 +571,15 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
             if (resultLocation != null && !routing) {
                 mapObjects.addPlacemark(
                         resultLocation,
-                        ImageProvider.fromResource(this, R.drawable.map_point));
+                        ImageProvider.fromResource(getContext(), R.drawable.map_point));
             } else if (resultLocation != null && routing) {
 
                 if (startPointRoute.getText().toString().equals(response.getMetadata().getRequestText())) {
-                    System.out.println("set start point" + resultLocation.getLatitude()+" "+resultLocation.getLongitude());
+                    System.out.println("set start point" + resultLocation.getLatitude() + " " + resultLocation.getLongitude());
                     startPoint = new Point(resultLocation.getLatitude(), resultLocation.getLongitude());
                 }
                 if (endPointRoute.getText().toString().equals(response.getMetadata().getRequestText())) {
-                    System.out.println("set end point"  + resultLocation.getLatitude()+" "+resultLocation.getLongitude());
+                    System.out.println("set end point" + resultLocation.getLatitude() + " " + resultLocation.getLongitude());
                     endPoint = new Point(resultLocation.getLatitude(), resultLocation.getLongitude());
                 }
             }
@@ -587,7 +590,7 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
     }
 
     public void commonError(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -599,7 +602,7 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
             errorMessage = getString(R.string.network_error_message);
         }
 
-        Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -627,7 +630,7 @@ public class MapActivity extends AppCompatActivity implements Session.RouteListe
             errorMessage = getString(R.string.network_error_message);
         }
 
-        Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();
     }
 
     private void requestSuggest(String query) {

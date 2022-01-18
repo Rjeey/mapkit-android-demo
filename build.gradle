@@ -22,7 +22,11 @@ android {
          * routing, panoramas, search and etc.
          * implementation 'com.yandex.android:maps.mobile:4.0.0-lite'
          */
+
         implementation 'com.yandex.android:maps.mobile:4.0.0-full'
+        implementation 'androidx.navigation:navigation-fragment:2.3.5'
+        implementation 'androidx.navigation:navigation-ui:2.3.5'
+        androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
     }
 
     compileSdkVersion 29
@@ -40,6 +44,7 @@ android {
             res.srcDirs = ['src/main/res']
         }
     }
+
 }
 
 dependencies {
