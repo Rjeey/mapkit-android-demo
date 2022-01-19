@@ -133,9 +133,6 @@ public class MapActivity extends Fragment implements Session.RouteListener,
 
         mapObjects = mapView.getMap().getMapObjects().addCollection();
 
-//        MapKitFactory.setApiKey("a305ff24-d0df-4871-9a52-0ae434368133");
-//        MapKitFactory.initialize(root.getContext());
-
         return root;
     }
 
@@ -568,6 +565,7 @@ public class MapActivity extends Fragment implements Session.RouteListener,
         }
         for (GeoObjectCollection.Item searchResult : response.getCollection().getChildren()) {
             Point resultLocation = searchResult.getObj().getGeometry().get(0).getPoint();
+            System.out.println(searchResult.getObj().getDescriptionText());
             if (resultLocation != null && !routing) {
                 mapObjects.addPlacemark(
                         resultLocation,
@@ -576,11 +574,11 @@ public class MapActivity extends Fragment implements Session.RouteListener,
 
                 if (startPointRoute.getText().toString().equals(response.getMetadata().getRequestText())) {
                     System.out.println("set start point" + resultLocation.getLatitude() + " " + resultLocation.getLongitude());
-                    startPoint = new Point(resultLocation.getLatitude(), resultLocation.getLongitude());
+                    startPoint = resultLocation;
                 }
                 if (endPointRoute.getText().toString().equals(response.getMetadata().getRequestText())) {
                     System.out.println("set end point" + resultLocation.getLatitude() + " " + resultLocation.getLongitude());
-                    endPoint = new Point(resultLocation.getLatitude(), resultLocation.getLongitude());
+                    endPoint = resultLocation;
                 }
             }
         }
