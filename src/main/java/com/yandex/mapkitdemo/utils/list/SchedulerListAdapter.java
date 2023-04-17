@@ -12,16 +12,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.yandex.mapkitdemo.R;
 import com.yandex.mapkitdemo.utils.model.Scheduler;
+import com.yandex.mapkitdemo.utils.model.ViewTransportData;
 import org.w3c.dom.Text;
 
 import java.util.List;
 
-public class SchedulerListAdapter extends ArrayAdapter<Scheduler> {
+public class SchedulerListAdapter extends ArrayAdapter<ViewTransportData> {
 
-    private Activity context;
-    private LayoutInflater inflater;
+    private final Activity context;
+    private final LayoutInflater inflater;
 
-    public SchedulerListAdapter(@NonNull Activity context, @NonNull List<Scheduler> objects) {
+    public SchedulerListAdapter(@NonNull Activity context, @NonNull List<ViewTransportData> objects) {
         super(context, R.layout.list_item, objects);
 
         this.context = context;
@@ -31,7 +32,7 @@ public class SchedulerListAdapter extends ArrayAdapter<Scheduler> {
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-        Scheduler scheduler = getItem(position);
+        ViewTransportData viewTransportData = getItem(position);
         View view = convertView;
         if(view == null){
             view = inflater.inflate(R.layout.list_item, parent, false);
@@ -40,12 +41,10 @@ public class SchedulerListAdapter extends ArrayAdapter<Scheduler> {
         ImageView imageView = view.findViewById(R.id.imageTR);
         TextView transportName = view.findViewById(R.id.transportName);
         TextView location = view.findViewById(R.id.location);
-        TextView time = view.findViewById(R.id.msgtime);
 
-        imageView.setImageResource(scheduler.getType());
-        transportName.setText(scheduler.getName());
-        location.setText(scheduler.getLocation());
-        time.setText(scheduler.getTime());
+        imageView.setImageResource(viewTransportData.getImgId());
+        transportName.setText(String.valueOf(viewTransportData.getNumber()));
+        location.setText(viewTransportData.getPath());
 
         return view;
     }

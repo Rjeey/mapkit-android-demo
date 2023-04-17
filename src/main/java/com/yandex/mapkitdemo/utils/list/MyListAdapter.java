@@ -8,37 +8,40 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 import com.yandex.mapkitdemo.R;
+import com.yandex.mapkitdemo.utils.model.ViewTransportData;
 
-public class MyListAdapter extends ArrayAdapter<String> {
+import java.util.List;
+
+public class MyListAdapter extends ArrayAdapter<ViewTransportData> {
 
     private final Activity context;
-    private final String[] maintitle;
-    private final String[] subtitle;
-    private final Integer[] imgid;
+    private final LayoutInflater inflater;
 
-    public MyListAdapter(Activity context, String[] maintitle,String[] subtitle, Integer[] imgid) {
-        super(context, R.layout.my_custom_list, maintitle);
+    public MyListAdapter(Activity context, List<ViewTransportData> list) {
+        super(context, R.layout.my_custom_list, list);
 
         this.context=context;
-        this.maintitle=maintitle;
-        this.subtitle=subtitle;
-        this.imgid=imgid;
-
+        inflater = LayoutInflater.from(context);
     }
 
     public View getView(int position, View view, ViewGroup parent) {
-        LayoutInflater inflater=context.getLayoutInflater();
-        View rowView=inflater.inflate(R.layout.my_custom_list, null,true);
+        ViewTransportData viewTransportData = getItem(position);
+        View mapTransportView = view;
+        if( view == null) {
+            mapTransportView = inflater.inflate(R.layout.my_custom_list, parent, false);
+        }
 
-        TextView titleText = (TextView) rowView.findViewById(R.id.title);
-        ImageView imageView = (ImageView) rowView.findViewById(R.id.icon);
-        TextView subtitleText = (TextView) rowView.findViewById(R.id.subtitle);
+        TextView numberTransp =  mapTransportView.findViewById(R.id.number_transp);
+        ImageView imageView = mapTransportView.findViewById(R.id.icon_transp);
+        TextView subtitleText = mapTransportView.findViewById(R.id.subtitle);
+        TextView textTiem = mapTransportView.findViewById(R.id.text_time);
 
-        titleText.setText(maintitle[position]);
-        imageView.setImageResource(imgid[position]);
-        subtitleText.setText(subtitle[position]);
+       numberTransp.setText(String.valueOf(viewTransportData.getNumber()));
+       imageView.setImageResource(viewTransportData.getImgId());
+       subtitleText.setText(viewTransportData.getPath());
+       textTiem.setText("5 минут");
 
-        return rowView;
+        return mapTransportView;
 
     };
 }

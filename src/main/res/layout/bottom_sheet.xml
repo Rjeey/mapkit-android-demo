@@ -35,12 +35,12 @@
                 android:layout_height="wrap_content"
                 android:src="@drawable/ic_baseline_close_24"
                 android:background="@drawable/rounded_button"
-                android:layout_below="@+id/dragImage"
+                android:layout_marginTop="20dp"
                 android:layout_marginRight="20dp"
-                android:layout_marginTop="10dp"
+
                 android:layout_alignParentRight="true"
                 android:layout_alignParentEnd="true"
-                android:contentDescription="Close"/>
+                android:contentDescription="Закрыть"/>
 
         <TextView
                 android:id="@+id/text_common"

@@ -11,9 +11,10 @@
 
         <ImageView
                 android:id="@+id/imageTR"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_marginLeft="5dp"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:src="@drawable/bus"
         />
 
@@ -22,14 +23,14 @@
                 android:id="@+id/transportName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="5dp"
-                android:layout_marginStart="5dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:text="25"
                 android:layout_toEndOf="@+id/imageTR"
                 android:layout_toRightOf="@+id/imageTR"
                 android:textColor="#000000"
                 android:textStyle="bold"
-                android:textSize="18sp"/>
+                android:textSize="20sp"/>
 
         <TextView
                 android:id="@+id/location"
@@ -37,25 +38,13 @@
                 android:layout_height="wrap_content"
                 android:layout_toEndOf="@+id/transportName"
                 android:layout_toRightOf="@+id/transportName"
-                android:layout_marginLeft="5dp"
-                android:layout_marginStart="5dp"
-                android:textSize="18sp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:textColor="#000000"
+                android:textSize="20sp"
                 android:textStyle="bold"
                 android:text="ул. Лобанка"/>
 
-
-        <TextView
-                android:id="@+id/msgtime"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_toEndOf="@+id/location"
-                android:layout_toRightOf="@+id/location"
-                android:textSize="18sp"
-                android:layout_marginLeft="5dp"
-                android:layout_marginStart="5dp"
-                android:textStyle="bold"
-                android:text="8:35"
-        />
 
 
     </RelativeLayout>

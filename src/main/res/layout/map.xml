@@ -16,6 +16,22 @@
             android:layout_height="match_parent">
 
         <ImageButton
+                android:id="@+id/close_route"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/custom_close"
+                android:src="@drawable/button_left"
+                android:scaleType="fitXY"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_marginLeft="14dp"
+                android:layout_marginStart="14dp"
+                android:visibility="invisible"
+        />
+
+        <ImageButton
                 android:id="@+id/route_btn"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
@@ -44,8 +60,9 @@
                 android:layout_marginEnd="16dp"
         />
 
-        <androidx.coordinatorlayout.widget.CoordinatorLayout android:layout_width="match_parent"
-                                                             android:layout_height="match_parent">
+        <androidx.coordinatorlayout.widget.CoordinatorLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
 
             <include layout="@layout/bottom_sheet"/>
 
@@ -53,9 +70,6 @@
 
 
     </com.yandex.mapkit.mapview.MapView>
-
-
-
 
 
 </RelativeLayout>

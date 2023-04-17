@@ -1,8 +1,12 @@
 package com.yandex.mapkitdemo.ui.map;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.graphics.Color;
 import android.graphics.PointF;
+import android.icu.text.DecimalFormat;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
@@ -12,7 +16,8 @@ import android.widget.*;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.gun0912.tedpermission.PermissionListener;
@@ -26,24 +31,28 @@ import com.yandex.mapkit.layers.GeoObjectTapEvent;
 import com.yandex.mapkit.layers.GeoObjectTapListener;
 import com.yandex.mapkit.layers.ObjectEvent;
 import com.yandex.mapkit.map.*;
-import com.yandex.mapkit.map.Map;
-import com.yandex.mapkit.map.internal.MapBinding;
 import com.yandex.mapkit.mapview.MapView;
 import com.yandex.mapkit.search.*;
 import com.yandex.mapkit.transport.TransportFactory;
-import com.yandex.mapkit.transport.masstransit.*;
 import com.yandex.mapkit.transport.masstransit.Session;
+import com.yandex.mapkit.transport.masstransit.*;
 import com.yandex.mapkit.user_location.UserLocationLayer;
 import com.yandex.mapkit.user_location.UserLocationObjectListener;
 import com.yandex.mapkit.user_location.UserLocationView;
 import com.yandex.mapkitdemo.R;
+import com.yandex.mapkitdemo.utils.GlobalStorage;
+import com.yandex.mapkitdemo.utils.list.MyListAdapter;
+import com.yandex.mapkitdemo.utils.model.ViewTransportData;
 import com.yandex.runtime.Error;
 import com.yandex.runtime.i18n.I18nManagerFactory;
 import com.yandex.runtime.image.ImageProvider;
 import com.yandex.runtime.network.NetworkError;
 import com.yandex.runtime.network.RemoteError;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * This is a basic example that displays a map and sets camera focus on the target location.
@@ -73,6 +82,8 @@ public class MapActivity extends Fragment implements Session.RouteListener,
     private boolean routing = false;
     private Point startPoint;
     private Point endPoint;
+    private boolean demoTransitDraw = true;
+    private boolean drawTransitRoute = false;
 
 
     private MapView mapView;
@@ -81,35 +92,40 @@ public class MapActivity extends Fragment implements Session.RouteListener,
     private UserLocationLayer userLocationLayer;
     private MapKit mapKit;
     private com.yandex.mapkit.search.Session searchSession;
+    private com.yandex.mapkit.search.Session searchTransitSession;
     private SearchManager searchManager;
     private SuggestSession suggestSession;
     private List<String> suggestResultRoute;
     private ArrayAdapter<String> resultAdapterRoute;
     private View fragmentMap;
     private View root;
+    List<ViewTransportData> mapTranspData = new ArrayList<>();
+    private Point tapOnIconPoint = null;
 
 
     private boolean isFind = false;
 
     private BottomSheetBehavior bottomSheetBehavior;
     private LinearLayout linearLayoutBSheet;
-    private ListView listView;
+    private ListView listViewTransp;
     private TextView textCommon, textDescription, textNumberTransport, textSubtitle, textTimeArrived;
     private ImageButton btnClose;
     private ImageView iconTransp;
     private ImageButton findLocation;
     private ImageButton routeBtn;
+    private ImageButton closeRoute;
     private Button closeBtnRoute;
     private Button buildBtnRoute;
     private AlertDialog dialog;
     private AutoCompleteTextView startPointRoute;
     private AutoCompleteTextView endPointRoute;
-
+    private MyListAdapter mapTransportData ;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
+        GlobalStorage.initTransportSchedulers();
         fragmentMap = inflater.inflate(R.layout.map, container, false);
         root = fragmentMap.getRootView();
 
@@ -118,6 +134,13 @@ public class MapActivity extends Fragment implements Session.RouteListener,
             Window window = getActivity().getWindow();
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.setStatusBarColor(Color.TRANSPARENT);
+        }
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            NotificationChannel channel = new NotificationChannel("Rjeey", "Rjeey", NotificationManager.IMPORTANCE_DEFAULT);
+            NotificationManager manager = root.getContext().getSystemService(NotificationManager.class);
+            manager.createNotificationChannel(channel);
+
         }
 
         mapView = root.findViewById(R.id.mapview);
@@ -130,10 +153,24 @@ public class MapActivity extends Fragment implements Session.RouteListener,
         mapView.getMap().addTapListener(this);
         mapView.getMap().addInputListener(this);
         mapView.getMap().deselectGeoObject();
+        checkPermission();
 
         mapObjects = mapView.getMap().getMapObjects().addCollection();
 
+
+
         return root;
+    }
+
+    private void showNotification(){
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(root.getContext(), "Rjeey");
+        builder.setContentTitle("Информация о транспорте");
+        builder.setContentText(GlobalStorage.notifications.get(0));
+        builder.setSmallIcon(R.drawable.ic_map);
+        builder.setAutoCancel(true);
+
+        NotificationManagerCompat managerCompat = NotificationManagerCompat.from(root.getContext());
+        managerCompat.notify(1, builder.build());
     }
 
 
@@ -149,7 +186,8 @@ public class MapActivity extends Fragment implements Session.RouteListener,
         endPointRoute = view.findViewById(R.id.edit_end_point_route);
         suggestResultRoute = new ArrayList<>();
         resultAdapterRoute = new ArrayAdapter<>(getContext(),
-                android.R.layout.simple_dropdown_item_1line,
+                android.R.layout.simple_list_item_2,
+                android.R.id.text1,
                 suggestResultRoute);
         startPointRoute.setAdapter(resultAdapterRoute);
         startPointRoute.addTextChangedListener(new TextWatcher() {
@@ -201,6 +239,7 @@ public class MapActivity extends Fragment implements Session.RouteListener,
                     submitQuery(startPointRoute.getText().toString());
                     System.out.println(endPointRoute.getText());
                     submitQuery(endPointRoute.getText().toString());
+                    closeRoute.setVisibility(View.VISIBLE);
                 }
 
 //                drawRoutes();
@@ -250,7 +289,7 @@ public class MapActivity extends Fragment implements Session.RouteListener,
 
         this.linearLayoutBSheet = root.findViewById(R.id.bottomSheet);
         this.bottomSheetBehavior = BottomSheetBehavior.from(linearLayoutBSheet);
-        this.listView = root.findViewById(R.id.list_transp);
+        this.listViewTransp = root.findViewById(R.id.list_transp);
         this.textCommon = root.findViewById(R.id.text_common);
         this.textDescription = root.findViewById(R.id.text_description);
         this.textNumberTransport = root.findViewById(R.id.number_transp);
@@ -260,6 +299,33 @@ public class MapActivity extends Fragment implements Session.RouteListener,
         this.iconTransp = root.findViewById(R.id.icon_transp);
         this.findLocation = root.findViewById(R.id.find_loc_btn);
         this.routeBtn = root.findViewById(R.id.route_btn);
+        this.closeRoute = root.findViewById(R.id.close_route);
+
+//        if(tapOnIconPoint!= null && GlobalStorage.transportData.stream().filter(i-> i.getNumber() == 19).findFirst().get().getRoute().get(0).getPoints().stream().filter(i-> i.equals(tapOnIconPoint)).findFirst().get().equals(tapOnIconPoint)) {
+//        }
+            mapTranspData.add(GlobalStorage.transportData.stream().filter(i -> i.getNumber() == 19).findFirst().get());
+        this.mapTransportData = new MyListAdapter(this.getActivity(), mapTranspData);
+        listViewTransp.setAdapter(mapTransportData);
+
+        listViewTransp.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                drawSectionTransit();
+
+            }
+        });
+
+
+
+        closeRoute.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mapObjects != null){
+                    mapObjects.clear();
+                    closeRoute.setVisibility(View.INVISIBLE);
+                }
+            }
+        });
 
         findLocation.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -281,13 +347,13 @@ public class MapActivity extends Fragment implements Session.RouteListener,
 //        listView.setAdapter(adapter);
 
 
-        bottomSheetBehavior.setPeekHeight(0);
+        bottomSheetBehavior.setPeekHeight(0, true);
 
         btnClose.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-                bottomSheetBehavior.setPeekHeight(0);
+//                bottomSheetBehavior.setPeekHeight(0);
             }
         });
 
@@ -296,12 +362,14 @@ public class MapActivity extends Fragment implements Session.RouteListener,
             public void onStateChanged(@NonNull View view, int i) {
 
                 if (i == BottomSheetBehavior.STATE_COLLAPSED) {
-                    bottomSheetBehavior.setPeekHeight(300);
+                    bottomSheetBehavior.setPeekHeight(700);
                 }
-                if (i == BottomSheetBehavior.STATE_COLLAPSED && bottomSheetBehavior.getPeekHeight() == 300) {
+                if (i == BottomSheetBehavior.STATE_COLLAPSED) {
+
                     bottomSheetBehavior.setPeekHeight(100);
                 }
                 if (i == BottomSheetBehavior.STATE_HIDDEN) {
+                    bottomSheetBehavior.setPeekHeight(0);
                     mapView.getMap().deselectGeoObject();
                 }
             }
@@ -382,22 +450,16 @@ public class MapActivity extends Fragment implements Session.RouteListener,
     }
 
 
-    private void drawSectionTransit(SectionMetadata.SectionData data,
-                                    Polyline geometry) {
+    private void drawSectionTransit() {
+        MasstransitOptions options = new MasstransitOptions(
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new TimeOptions());
+        List<RequestPoint> points = new ArrayList<>();
+        mapTranspData.get(0).getRoute().get(0).getPoints()
+                .forEach(i-> points.add(new RequestPoint(i,RequestPointType.WAYPOINT, null)));
 
-        PolylineMapObject polylineMapObject = mapObjects.addPolyline(geometry);
-
-        if (data.getTransports() != null) {
-
-            for (Transport transport : data.getTransports()) {
-                if (transport.getLine().getStyle() != null) {
-                    polylineMapObject.setStrokeColor(
-                            transport.getLine().getStyle().getColor() | 0xFF000000
-                    );
-                    return;
-                }
-            }
-        }
+        mtRouter.requestRoutes(points, options, this);
     }
 
     private void drawSection(SectionMetadata.SectionData data,
@@ -405,7 +467,7 @@ public class MapActivity extends Fragment implements Session.RouteListener,
 
         PolylineMapObject polylineMapObject = mapObjects.addPolyline(geometry);
 
-        if (data.getTransports() != null) {
+        if (data.getTransports() != null && drawTransitRoute) {
 
             for (Transport transport : data.getTransports()) {
 
@@ -437,7 +499,11 @@ public class MapActivity extends Fragment implements Session.RouteListener,
             polylineMapObject.setStrokeColor(0xFF0000FF);  // Blue
         } else {
 
-            polylineMapObject.setStrokeColor(0xFF000000);  // Black
+            if(!drawTransitRoute){
+                polylineMapObject.setStrokeColor(0xFF000000);// Black
+            }
+            polylineMapObject.setStrokeColor(0xFF0000FF); // Blue
+
         }
     }
 
@@ -454,6 +520,7 @@ public class MapActivity extends Fragment implements Session.RouteListener,
         return "unknown";
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public boolean onObjectTap(@NonNull GeoObjectTapEvent geoObjectTapEvent) {
         final GeoObjectSelectionMetadata selectionMetadata = geoObjectTapEvent
@@ -461,8 +528,17 @@ public class MapActivity extends Fragment implements Session.RouteListener,
                 .getMetadataContainer()
                 .getItem(GeoObjectSelectionMetadata.class);
 
+
+        textCommon.setText(geoObjectTapEvent.getGeoObject().getName());
+        textDescription.setText( new DecimalFormat("#0.00000")
+                .format(geoObjectTapEvent.getGeoObject().getGeometry().get(0).getPoint().getLatitude())+" " +
+                " "+ new DecimalFormat("#0.00000")
+                .format(geoObjectTapEvent.getGeoObject().getGeometry().get(0).getPoint().getLongitude()));
+
+        tapOnIconPoint = geoObjectTapEvent.getGeoObject().getGeometry().get(0).getPoint();
+
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-        bottomSheetBehavior.setPeekHeight(300);
+        bottomSheetBehavior.setPeekHeight(700);
 
 
         System.out.println(geoObjectTapEvent.getGeoObject().getName());
@@ -473,6 +549,12 @@ public class MapActivity extends Fragment implements Session.RouteListener,
         if (selectionMetadata != null) {
             mapView.getMap().selectGeoObject(selectionMetadata.getId(), selectionMetadata.getLayerId());
         }
+        System.out.println(tapOnIconPoint);
+//
+//        if(tapOnIconPoint!= null && GlobalStorage.transportData.stream().filter(i-> i.getNumber() == 19).findFirst().get().getRoute().get(0).getPoints().stream().filter(i-> i.equals(tapOnIconPoint)).findFirst().get().equals(tapOnIconPoint)) {
+//            mapTranspData.add(GlobalStorage.transportData.stream().filter(i -> i.getNumber() == 19).findFirst().get());
+//            mapTransportData.notifyDataSetChanged();
+//        }
 
         return selectionMetadata != null;
     }
@@ -549,6 +631,9 @@ public class MapActivity extends Fragment implements Session.RouteListener,
                 new CameraPosition(startPoint, 15.0f, 0.0f, 0.0f),
                 new Animation(Animation.Type.SMOOTH, 5),
                 null);
+        showNotification();
+        startPointRoute.setText("");
+        endPointRoute.setText("");
     }
 
     @Override
@@ -559,6 +644,7 @@ public class MapActivity extends Fragment implements Session.RouteListener,
         System.out.println(routing);
         System.out.println("text" + response.getMetadata().getRequestText());
         System.out.println("type" + response.getMetadata().getDisplayType());
+
         if (response.getCollection().getChildren().size() > 0) {
             System.out.println(response.getCollection().getChildren().get(0).getObj().getGeometry().get(0).getPoint().getLongitude());
             System.out.println(response.getCollection().getChildren().get(0).getObj().getGeometry().get(0).getPoint().getLatitude());
@@ -582,7 +668,9 @@ public class MapActivity extends Fragment implements Session.RouteListener,
                 }
             }
         }
+
         if (startPoint != null && endPoint != null) {
+            GlobalStorage.notifications.add("Автобус 19 будет через 5 минут");
             drawRoutes();
         }
     }

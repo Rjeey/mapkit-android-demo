@@ -9,15 +9,21 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.yandex.mapkit.MapKitFactory;
+import com.yandex.mapkitdemo.utils.GlobalStorage;
 
 public class MainActivity extends AppCompatActivity {
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        if(!GlobalStorage.mapState) {
+            MapKitFactory.setApiKey("a305ff24-d0df-4871-9a52-0ae434368133");
+            MapKitFactory.initialize(this);
+            GlobalStorage.mapState = true;
+        }
         super.onCreate(savedInstanceState);
-        MapKitFactory.setApiKey("a305ff24-d0df-4871-9a52-0ae434368133");
-        MapKitFactory.initialize(this);
+
         getSupportActionBar().hide();
 
         setContentView(R.layout.main_activity);
@@ -30,4 +36,6 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
     }
+
+
 }
